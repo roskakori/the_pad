@@ -12,7 +12,8 @@ setup(name='micropython-the-pad',
       license='MIT',
       cmdclass={'sdist': sdist_upip.sdist},
       version="1.2.0",
-      py_modules=[]
-      #packages=find_packages(),
+      py_modules=['ak8963', 'boot', 'glcdfont', 'ili934xhaxx', 'led_show', 'pu6500', 'pins', 'bme28', 'ili934xhax', 'ili934xnew', 'mcp', 'mpu9250', 'sdcard'],
+      #packages=find_packages('the_pad'),
+      packages=['the_pad.demos'],
       #py_modules=['the_pad/boot.py'])
       )
