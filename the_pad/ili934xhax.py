@@ -19,48 +19,44 @@ import glcdfont
 import framebuf
 from micropython import const
 
-_RDDSDR = const(0x0f)  # Read Display Self-Diagnostic Result
-_SLPOUT = const(0x11)  # Sleep Out
-_GAMSET = const(0x26)  # Gamma Set
-_DISPOFF = const(0x28)  # Display Off
-_DISPON = const(0x29)  # Display On
-_CASET = const(0x2a)  # Column Address Set
-_PASET = const(0x2b)  # Page Address Set
-_RAMWR = const(0x2c)  # Memory Write
-_RAMRD = const(0x2e)  # Memory Read
-_MADCTL = const(0x36)  # Memory Access Control
-_VSCRSADD = const(0x37)  # Vertical Scrolling Start Address
-_PIXSET = const(0x3a)  # Pixel Format Set
-_PWCTRLA = const(0xcb)  # Power Control A
-_PWCRTLB = const(0xcf)  # Power Control B
-_DTCTRLA = const(0xe8)  # Driver Timing Control A
-_DTCTRLB = const(0xea)  # Driver Timing Control B
-_PWRONCTRL = const(0xed)  # Power on Sequence Control
-_PRCTRL = const(0xf7)  # Pump Ratio Control
-_PWCTRL1 = const(0xc0)  # Power Control 1
-_PWCTRL2 = const(0xc1)  # Power Control 2
-_VMCTRL1 = const(0xc5)  # VCOM Control 1
-_VMCTRL2 = const(0xc7)  # VCOM Control 2
-_FRMCTR1 = const(0xb1)  # Frame Rate Control 1
-_DISCTRL = const(0xb6)  # Display Function Control
-_ENA3G = const(0xf2)  # Enable 3G
-_PGAMCTRL = const(0xe0)  # Positive Gamma Control
-_NGAMCTRL = const(0xe1)  # Negative Gamma Control
+_RDDSDR = const(0x0f) # Read Display Self-Diagnostic Result
+_SLPOUT = const(0x11) # Sleep Out
+_GAMSET = const(0x26) # Gamma Set
+_DISPOFF = const(0x28) # Display Off
+_DISPON = const(0x29) # Display On
+_CASET = const(0x2a) # Column Address Set
+_PASET = const(0x2b) # Page Address Set
+_RAMWR = const(0x2c) # Memory Write
+_RAMRD = const(0x2e) # Memory Read
+_MADCTL = const(0x36) # Memory Access Control
+_VSCRSADD = const(0x37) # Vertical Scrolling Start Address
+_PIXSET = const(0x3a) # Pixel Format Set
+_PWCTRLA = const(0xcb) # Power Control A
+_PWCRTLB = const(0xcf) # Power Control B
+_DTCTRLA = const(0xe8) # Driver Timing Control A
+_DTCTRLB = const(0xea) # Driver Timing Control B
+_PWRONCTRL = const(0xed) # Power on Sequence Control
+_PRCTRL = const(0xf7) # Pump Ratio Control
+_PWCTRL1 = const(0xc0) # Power Control 1
+_PWCTRL2 = const(0xc1) # Power Control 2
+_VMCTRL1 = const(0xc5) # VCOM Control 1
+_VMCTRL2 = const(0xc7) # VCOM Control 2
+_FRMCTR1 = const(0xb1) # Frame Rate Control 1
+_DISCTRL = const(0xb6) # Display Function Control
+_ENA3G = const(0xf2) # Enable 3G
+_PGAMCTRL = const(0xe0) # Positive Gamma Control
+_NGAMCTRL = const(0xe1) # Negative Gamma Control
 
-_CHUNK = const(1024)  # maximum number of pixels per spi write
+_CHUNK = const(1024) #maximum number of pixels per spi write
 
-
-def color565(r, g, b):
+def color565(r, g, b): # returns swapped 16 bit color - for use with micropython framebuf module
     return swap16((r & 0xf8) << 8 | (g & 0xfc) << 3 | b >> 3)
-
 
 def swap16(i):
     return ustruct.unpack("<H", ustruct.pack(">H", i))[0]
 
-
-def color565n(r, g, b):
+def color565n(r, g, b): # returns normal 16 bit color - for use with display driver directly
     return (r & 0xf8) << 8 | (g & 0xfc) << 3 | b >> 3
-
 
 class ILI9341:
 
@@ -79,19 +75,19 @@ class ILI9341:
         self.init()
         self._scroll = 0
         self._buf = bytearray(_CHUNK * 2)
-        self._colormap = bytearray(b'\x00\x00\xFF\xFF')  # default white foregraound, black background
+        self._colormap = bytearray(b'\x00\x00\xFF\xFF') #default white foregraound, black background
         self._x = 0
         self._y = 0
         self._font = glcdfont
         self.scrolling = False
 
-    def set_color(self, fg, bg):
-        self._colormap[0] = bg >> 8
+    def set_color(self,fg,bg):
+        self._colormap[0] = bg>>8
         self._colormap[1] = bg & 255
-        self._colormap[2] = fg >> 8
+        self._colormap[2] = fg>>8
         self._colormap[3] = fg & 255
 
-    def set_pos(self, x, y):
+    def set_pos(self,x,y):
         self._x = x
         self._y = y
 
@@ -104,26 +100,27 @@ class ILI9341:
         self._font = font
 
     def init(self):
-        for command, data in ((_RDDSDR, b"\x03\x80\x02"),
-                              (_PWCRTLB, b"\x00\xc1\x30"),
-                              (_PWRONCTRL, b"\x64\x03\x12\x81"),
-                              (_DTCTRLA, b"\x85\x00\x78"),
-                              (_PWCTRLA, b"\x39\x2c\x00\x34\x02"),
-                              (_PRCTRL, b"\x20"),
-                              (_DTCTRLB, b"\x00\x00"),
-                              (_PWCTRL1, b"\x23"),
-                              (_PWCTRL2, b"\x10"),
-                              (_VMCTRL1, b"\x3e\x28"),
-                              (_VMCTRL2, b"\x86"),
-                              # (_MADCTL, b"\x48"),
-                              (_MADCTL, b"\x48"),  # var x08
-                              (_PIXSET, b"\x55"),
-                              (_FRMCTR1, b"\x00\x18"),
-                              (_DISCTRL, b"\x08\x82\x27"),
-                              (_ENA3G, b"\x00"),
-                              (_GAMSET, b"\x01"),
-                              (_PGAMCTRL, b"\x0f\x31\x2b\x0c\x0e\x08\x4e\xf1\x37\x07\x10\x03\x0e\x09\x00"),
-                              (_NGAMCTRL, b"\x00\x0e\x14\x03\x11\x07\x31\xc1\x48\x08\x0f\x0c\x31\x36\x0f")):
+        for command, data in (
+            (_RDDSDR, b"\x03\x80\x02"),
+            (_PWCRTLB, b"\x00\xc1\x30"),
+            (_PWRONCTRL, b"\x64\x03\x12\x81"),
+            (_DTCTRLA, b"\x85\x00\x78"),
+            (_PWCTRLA, b"\x39\x2c\x00\x34\x02"),
+            (_PRCTRL, b"\x20"),
+            (_DTCTRLB, b"\x00\x00"),
+            (_PWCTRL1, b"\x23"),
+            (_PWCTRL2, b"\x10"),
+            (_VMCTRL1, b"\x3e\x28"),
+            (_VMCTRL2, b"\x86"),
+            #(_MADCTL, b"\x48"),
+            (_MADCTL, b"\x48"), #var x08
+            (_PIXSET, b"\x55"),
+            (_FRMCTR1, b"\x00\x18"),
+            (_DISCTRL, b"\x08\x82\x27"),
+            (_ENA3G, b"\x00"),
+            (_GAMSET, b"\x01"),
+            (_PGAMCTRL, b"\x0f\x31\x2b\x0c\x0e\x08\x4e\xf1\x37\x07\x10\x03\x0e\x09\x00"),
+            (_NGAMCTRL, b"\x00\x0e\x14\x03\x11\x07\x31\xc1\x48\x08\x0f\x0c\x31\x36\x0f")):
             self._write(command, data)
         self._write(_SLPOUT)
         time.sleep_ms(120)
@@ -154,7 +151,7 @@ class ILI9341:
         self._write(_PASET, ustruct.pack(">HH", y0, y1))
         self._write(_RAMWR, data)
 
-    def _readblock(self, x0, y0, x1, y1, data=None):
+    def _readblock(self, x0, y0, x1, y1):
         self._write(_CASET, ustruct.pack(">HH", x0, x1))
         self._write(_PASET, ustruct.pack(">HH", y0, y1))
         if data is None:
@@ -184,10 +181,9 @@ class ILI9341:
         if color:
             color = ustruct.pack(">H", color)
         else:
-            color = self._colormap[0:2]  # background
+            color = self._colormap[0:2] #background
         for i in range(_CHUNK):
-            self._buf[2 * i] = color[0]
-            self._buf[2*i+1] = color[1]
+            self._buf[2*i]=color[0]; self._buf[2*i+1]=color[1]
         chunks, rest = divmod(w * h, _CHUNK)
         self._writeblock(x, y, x + w - 1, y + h - 1, None)
         if chunks:
@@ -255,7 +251,7 @@ class ILI9341:
             self.fill_rectangle(0, res, self.width, self._font.height())
         return res
 
-    def write(self, text):  # does character wrap, compatible with stream output
+    def write(self, text): #does character wrap, compatible with stream output
         curx = self._x; cury = self._y
         char_h = self._font.height()
         width = 0
@@ -263,24 +259,23 @@ class ILI9341:
         for pos, ch in enumerate(text):
             if ch == '\n':
                 if pos>0:
-                    self.chars(text[written:pos], curx, cury)
+                    self.chars(text[written:pos],curx,cury)
                 curx = 0; written = pos+1; width = 0
-                cury = self.next_line(cury, char_h)
+                cury = self.next_line(cury,char_h)
             else:
                 char_w = self._font.get_width(ch)
                 if curx + width + char_w >= self.width:
-                    self.chars(text[written:pos], curx, cury)
-                    curx = 0
-                    written = pos
-                    width = char_h
-                    cury = self.next_line(cury, char_h)
+                    self.chars(text[written:pos], curx,cury)
+                    curx = 0 ; written = pos; width = char_h
+                    cury = self.next_line(cury,char_h)
                 else:
                     width += char_w
         if written<len(text):
             curx = self.chars(text[written:], curx,cury)
         self._x = curx; self._y = cury
 
-    def print(self, text):  # does word wrap, leaves self._x unchanged
+
+    def print(self, text): #does word wrap, leaves self._x unchanged
         cury = self._y; curx = self._x
         char_h = self._font.height()
         char_w = self._font.max_width()
