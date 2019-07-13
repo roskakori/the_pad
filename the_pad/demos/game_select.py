@@ -1,7 +1,7 @@
-from the_pad.ili934xhax import ILI9341, color565, color565n
+from ili934xhax import ILI9341, color565, color565n
 from machine import SPI, Pin, I2C
-import the_pad.mcpnew as mcpnew
-
+import mcpnew as mcpnew
+import time
 spi = SPI(
     2,
     baudrate=40000000,
@@ -68,6 +68,8 @@ display.set_pos(0,0)
 display.width = 240
 display.height = 320
 
+display.fill_rectangle(0, 0, 240, 320, color565n(255, 0, 0))
+time.sleep(1)
 display.fill_rectangle(0, 0, 240, 320, color565n(0, 0, 0))
 
 display.set_color(color565n(220, 220, 160), color565n(0,0,30))
@@ -76,13 +78,16 @@ display.set_pos(50, 50)
 display.write("Tetris")
 
 display.set_pos(50, 70)
-display.write("Snake")
+display.write("3D dungeon")
 
 display.set_pos(50, 90)
 display.write("Weather report")
 
 display.set_pos(50, 110)
-display.write("3D dungeon")
+display.write("Snek")
+
+display.set_pos(50, 130)
+display.write("raffle")
 
 
 selection = 0
@@ -117,7 +122,7 @@ while True:
         if not moved:
             display.fill_rectangle(43, 52 + selection*20, 4, 4, color565n(0, 0, 0))
             selection += 1
-            if selection > 3:
+            if selection > 4:
                 selection = 0
 
             moved = True
@@ -134,13 +139,16 @@ while True:
             tetrix.run()
 
         if selection == 1:
-            import snek
-            snek.run()
+            import rtracnew
+            rtracnew.run()
 
         if selection == 2:
             import temperature
             temperature.run()
 
         if selection == 3:
-            import rtracnew
-            rtracnew.run()
+            import snek
+            snek.run()
+
+        if selection == 4:
+            import raffle

@@ -1,7 +1,7 @@
 # display - official
-from the_pad.ili934xnew import ILI9341, color565
+from ili934xnew import ILI9341, color565
 from machine import SPI, Pin
-import the_pad.mcpnew as mcpnew
+import mcpnew as mcpnew
 
 spi = SPI(
     2,
